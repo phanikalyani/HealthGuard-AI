@@ -18,7 +18,6 @@ y = data['Outcome']
 # Scale features
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
-
 # Train model
 model = LogisticRegression()
 model.fit(X_scaled, y)
@@ -28,7 +27,6 @@ st.set_page_config(page_title="HealthGuard AI", layout="centered")
 st.title("🩺 HealthGuard AI")
 st.subheader("Predicting Health Risks Before It’s Too Late")
 
-st.markdown( "*This tool provides an AI-based risk estimate and is not a medical diagnosis.*" )
 
 # Inputs
 preg = st.number_input("Pregnancies", 0, 20, 1)
