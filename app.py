@@ -18,8 +18,7 @@ model.fit(X_scaled, y)
 st.set_page_config(page_title="HealthGuard AI", layout="centered")
 st.title(" HealthGuard AI")
 st.subheader("Predicting Health Risks Before It’s Too Late")
-st.markdown(" *This tool provides an AI-based risk estimate and is not a
-medical diagnosis.*")
+st.markdown(" *This tool provides an AI-based risk estimate and is not a medical diagnosis.*")
 # User Inputs
 preg = st.number_input("Pregnancies", 0, 20, 1)
 glucose = st.slider("Glucose Level", 50, 200, 120)
