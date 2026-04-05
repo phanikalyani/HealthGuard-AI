@@ -7,7 +7,6 @@ import os
 
 from db import *
 from utils import calculate_bmi
-
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 
