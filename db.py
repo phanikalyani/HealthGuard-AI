@@ -1,76 +1,114 @@
 import sqlite3
-import hashlib
+import bcrypt
+import pandas as pd
 
-# Connect to SQLite database (auto-creates if it doesn't exist)
-conn = sqlite3.connect("healthguard.db", check_same_thread=False)
-c = conn.cursor()
+# ✅ Safe connection (no global lock)
+def get_connection():
+    return sqlite3.connect("healthguard.db", timeout=10)
 
-# ---------------- CREATE TABLES ----------------
+# ================= INIT DB =================
+def init_db():
+    conn = get_connection()
+    c = conn.cursor()
 
-# Users table
-c.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-)
-""")
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        username TEXT PRIMARY KEY,
+        password BLOB,
+        age INTEGER,
+        weight REAL,
+        height REAL
+    )
+    """)
 
-# Feedback table
-c.execute("""
-CREATE TABLE IF NOT EXISTS feedback (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_email TEXT NOT NULL,
-    message TEXT NOT NULL
-)
-""")
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS history(
+        user TEXT,
+        glucose REAL,
+        bmi REAL,
+        age INTEGER,
+        prediction INTEGER
+    )
+    """)
 
-conn.commit()
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS feedback(
+        user TEXT,
+        message TEXT
+    )
+    """)
 
-# ---------------- PASSWORD HASHING ----------------
+    conn.commit()
+    conn.close()
 
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
+# ================= USER =================
+def create_user(username, password, age, weight, height):
+    conn = get_connection()
+    c = conn.cursor()
 
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
-# ---------------- USER FUNCTIONS ----------------
-
-def create_user(name, email, password):
     try:
-        hashed_password = hash_password(password)
-        c.execute(
-            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-            (name, email, hashed_password)
-        )
+        c.execute("INSERT INTO users VALUES (?,?,?,?,?)",
+                  (username, hashed, age, weight, height))
         conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        # Email already exists
+    except:
         return False
 
+    conn.close()
+    return True
 
-def login_user(email, password):
-    hashed_password = hash_password(password)
-    c.execute(
-        "SELECT * FROM users WHERE email=? AND password=?",
-        (email, hashed_password)
-    )
-    return c.fetchone()
+def login_user(username, password):
+    conn = get_connection()
+    c = conn.cursor()
 
+    c.execute("SELECT password FROM users WHERE username=?", (username,))
+    result = c.fetchone()
 
-# ---------------- FEEDBACK FUNCTIONS ----------------
+    conn.close()
 
-def add_feedback(email, message):
-    c.execute(
-        "INSERT INTO feedback (user_email, message) VALUES (?, ?)",
-        (email, message)
-    )
+    if result:
+        return bcrypt.checkpw(password.encode(), result[0])
+
+    return False
+
+# ================= HISTORY =================
+def save_history(user, glucose, bmi, age, prediction):
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute()
+    c.execute("INSERT INTO history VALUES (?,?,?,?,?)",
+              (user, glucose, bmi, age, prediction))
+
     conn.commit()
+    conn.close()
+def get_history(user):
+    conn = get_connection()
+    df = pd.read_sql(
+        "SELECT * FROM history WHERE user=?",
+        conn,
+        params=(user,)
+    )
+    conn.close()
+    return df
+    
+    def add_feedback(user, msg):
+        conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("INSERT INTO feedback VALUES (?,?)", (user, msg))
+
+    conn.commit()
+    conn.close()
 
 
-def get_all_feedback():
+def get_feedback():
+    conn = get_connection()
+    c = conn.cursor()
+
     c.execute("SELECT * FROM feedback")
-    return c.fetchall()
+    data = c.fetchall()
 
-
+    conn.close()
+    return data
