@@ -105,7 +105,7 @@ elif menu == "Signup":
 elif menu == "Login":
     st.subheader("Login")
 
-    user = st.text_input("username")
+    user = st.text_input()
     pw = st.text_input("Password", type="password")
 
     if st.button("Login"):
