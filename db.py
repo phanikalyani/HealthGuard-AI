@@ -4,42 +4,13 @@ import pandas as pd
 
 # ✅ Safe connection (no global lock)
 def get_connection():
-    return sqlite3.connect("healthguard.db", timeout=10)
+    return sqlite3.connect("healthguard.db",ckeck_same_thread=False)
 
 # ================= INIT DB =================
 def init_db():
     conn = get_connection()
     c = conn.cursor()
 
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS users(
-        username TEXT PRIMARY KEY,
-        password BLOB,
-        age INTEGER,
-        weight REAL,
-        height REAL
-    )
-    """)
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS history(
-        user TEXT,
-        glucose REAL,
-        bmi REAL,
-        age INTEGER,
-        prediction INTEGER
-    )
-    """)
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS feedback(
-        user TEXT,
-        message TEXT
-    )
-    """)
-
-    conn.commit()
-    conn.close()
 
 # ================= USER =================
 def create_user(username, password, age, weight, height):
