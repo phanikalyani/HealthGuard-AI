@@ -112,7 +112,7 @@ elif menu == "Login":
     pw = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        if login_user(user, pw):
+        if login_user(username, pw):
             st.session_state.user = user
             st.success("Login successful")
         else:
