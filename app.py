@@ -11,6 +11,7 @@ from sklearn.metrics import confusion_matrix
 from db import *
 
 # ---------------- PAGE CONFIG ----------------
+st.page_config(page_title="HealthGuard AI", layout="centered")
 
 st.title("🏥 HealthGuard AI")
 st.subheader("Predicting Health Risks Before It’s Too Late")
