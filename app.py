@@ -95,7 +95,7 @@ elif menu == "Signup":
     height = st.number_input("Height (cm)")
 
     if st.button("Signup"):
-        if create_user(user, pw, age, weight, height):
+        
             st.success("Account created")
         else:
             st.error("User already exists")
