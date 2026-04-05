@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-from db import *
+from db import init_db, login_user, create_user, save_history, get_history, add_feedback, get_feedback
 from utils import calculate_bmi
 
 from sklearn.model_selection import train_test_split
