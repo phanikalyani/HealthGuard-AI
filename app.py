@@ -17,7 +17,7 @@ st.set_page_config(page_title="HealthGuard AI", layout="centered")
 st.title("🏥 HealthGuard AI")
 st.subheader("Predicting Health Risks Before It’s Too Late")
 
-st.markdown("""
+st.markdown("
 *This tool provides an AI-based health risk estimate 
 and is NOT a medical diagnosisimport streamlit as st
 import pandas as pd
