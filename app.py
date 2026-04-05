@@ -61,7 +61,6 @@ if choice == "Sign Up":
 # ---------------- LOGIN ----------------
 elif choice == "Login":
     st.subheader("🔐 Login")
-
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
