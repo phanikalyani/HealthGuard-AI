@@ -32,7 +32,7 @@ st.markdown("""
 h1,h2,h3 { color:#00f5ff; }
 .stButton>button {
     background: linear-gradient(45deg,#00f5ff,#00c6ff);
-    color:lightgray;
+    color:black;
     border-radius:10px;
 }
 </style>
@@ -42,8 +42,8 @@ h1,h2,h3 { color:#00f5ff; }
 st.markdown("""
 <div style="display:flex;align-items:center;gap:10px;">
 <img src="https://cdn-icons-png.flaticon.com/512/2966/2966489.png" width="50">
+<h1>HealthGuard AI</>
 <h1>HealthGuard AI</h1>
-
 </div>
 <hr>
 """, unsafe_allow_html=True)
@@ -80,9 +80,6 @@ menu = st.sidebar.selectbox(
     ["Home", "Login", "Signup", "Dashboard", "Feedback"]
 )
 
-def add_feedback(user, msg):
-    raise NotImplementedError
-
 # ================= HOME =================
 if menu == "Home":
     st.title("🛡 AI Healthcare Platform")
@@ -108,7 +105,7 @@ elif menu == "Signup":
 elif menu == "Login":
     st.subheader("Login")
 
-    user = st.text_input("username")
+    user = st.text_input("username"
     pw = st.text_input("Password", type="password")
 
     if st.button("Login"):
@@ -181,7 +178,7 @@ elif menu == "Dashboard":
         # Save history
         save_history(st.session_state.user, glucose, bmi_input, age, int(pred))
 
-        # Show input
+        
         # Show input data
         input_df = pd.DataFrame(input_data, columns=X.columns)
         st.subheader("Your Input Data")
@@ -246,7 +243,6 @@ Prediction: {"High Risk" if pred==1 else "Low Risk"}
 # ================= FEEDBACK =================
 elif menu == "Feedback":
 
-    
     if st.session_state.user is None:
         st.warning("Please login first")
         st.stop()
