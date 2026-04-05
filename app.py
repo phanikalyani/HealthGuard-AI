@@ -1,3 +1,4 @@
+import streamlit as st
 import pandas as pd
 import numpy as np
 import os
@@ -7,17 +8,40 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix
- 
-from db import *
+
+from db import create_user, login_user, add_feedback, get_all_feedback
 
 # ---------------- PAGE CONFIG ----------------
-st.page_config(page_title="HealthGuard AI", layout="centered")
+st.set_page_config(page_title="HealthGuard AI", layout="centered")
 
 st.title("🏥 HealthGuard AI")
 st.subheader("Predicting Health Risks Before It’s Too Late")
 
-st.markdown(""" *This tool provides an AI-based health risk estimate 
-            and is NOT a medical diagnosisPlease consult a doctor for professional medical advice.* """)
+st.markdown("""
+*This tool provides an AI-based health risk estimate 
+and is NOT a medical diagnosisimport streamlit as st
+import pandas as pd
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import confusion_matrix
+
+from db import create_user, login_user, add_feedback, get_all_feedback
+
+# ---------------- PAGE CONFIG ----------------
+st.set_page_config(page_title="HealthGuard AI", layout="centered")
+
+st.title("🏥 HealthGuard AI")
+st.subheader("Predicting Health Risks Before It’s Too Late")
+
+st.markdown("""
+*This tool provides an AI-based health risk estimate 
+and is NOT a medical diagnosisPlease consult a doctor for professional medical advice.*
+""")
 
 # ---------------- SESSION ----------------
 if "user" not in st.session_state:
@@ -149,7 +173,7 @@ elif choice == "Dashboard" and st.session_state.user:
         blood_pressure = st.number_input("Blood Pressure", 0, 200, 70)
         skin_thickness = st.number_input("Skin Thickness", 0, 100, 20)
         insulin = st.number_input("Insulin", 0, 900, 80)
-        bmi = st.number_input("BMI", 0.0, 70.0, 25.0)
+                bmi = st.number_input("BMI", 0.0, 70.0, 25.0)
         diabetes_pedigree = st.number_input("Diabetes Pedigree Function", 0.0, 3.0, 0.5)
         age = st.number_input("Age", 1, 120, 30)
 
