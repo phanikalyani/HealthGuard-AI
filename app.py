@@ -1,211 +1,229 @@
 import streamlit as st
-
-# MUST BE FIRST
-st.set_page_config(page_title="HealthGuard AI", layout="wide")
-
-# other imports
 import pandas as pd
 import numpy as np
 import os
-import matplotlib.pyplot as plt # pyright: ignore[reportMissingModuleSource]
-import seaborn as sns
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import confusion_matrix
 
-from db import *
+from db import create_user, login_user, add_feedback, get_all_feedback
 
-# NOW safe
-init_db()
-# ================= CONFIG =================
-st.set_page_config(page_title="HealthGuard AI", layout="wide")
-init_db()
+# ---------------- PAGE CONFIG ----------------
+st.set_page_config(page_title="HealthGuard AI", layout="centered")
 
-# ================= UI STYLE =================
+st.title("🏥 HealthGuard AI")
+st.subheader("Predicting Health Risks Before It’s Too Late")
+
 st.markdown("""
-<style>
-body {
-    background: linear-gradient(to right, #667eea, #764ba2);
-}
-.stButton>button {
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 10px;
-}
-</style>
-""", unsafe_allow_html=True)
+*This tool provides an AI-based health risk estimate 
+and is NOT a medical diagnosisimport streamlit as st
+import pandas as pd
+import numpy as np
+import os
+import matplotlib.pyplot as plt
 
-# ================= LOAD DATA =================
-@st.cache_data
-def load_data():
-    if os.path.exists("diabetes.csv"):
-        return pd.read_csv("diabetes.csv")
-    else:
-        return pd.DataFrame()
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import confusion_matrix
 
-data = load_data()
+from db import create_user, login_user, add_feedback, get_all_feedback
 
-# ================= MODEL =================
-if not data.empty:
-    X = data.drop("Outcome", axis=1)
-    y = data["Outcome"]
+# ---------------- PAGE CONFIG ----------------
+st.set_page_config(page_title="HealthGuard AI", layout="centered")
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+st.title("🏥 HealthGuard AI")
+st.subheader("Predicting Health Risks Before It’s Too Late")
 
-    model = RandomForestClassifier()
-    model.fit(X_train, y_train)
+st.markdown("""
+*This tool provides an AI-based health risk estimate 
+and is NOT a medical diagnosisPlease consult a doctor for professional medical advice.*
+""")
 
-# ================= SESSION =================
+# ---------------- SESSION ----------------
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# ================= MENU =================
-menu = st.sidebar.selectbox("Navigation",
-      ["Home", "Login", "Signup", "Dashboard", "Feedback"]
-)
+# ---------------- SIDEBAR ----------------
+if st.session_state.user:
+    menu = ["Dashboard", "Contact", "Logout"]
+else:
+    menu = ["Login", "Sign Up"]
 
-# ================= HOME =================
-if menu == "Home":
-    st.title("🩺 HealthGuard AI")
-    st.caption("AI-powered early disease prediction & smart health assistant")
+choice = st.sidebar.selectbox("Menu", menu)
 
-    st.info("Login or Signup to start predicting your health risk")
-
-# ================= SIGNUP =================
-elif menu == "Signup":
+# ---------------- SIGN UP ----------------
+if choice == "Sign Up":
     st.subheader("📝 Create Account")
 
-    user = st.text_input("Username")
-    pw = st.text_input("Password", type="password")
+    name = st.text_input("Name")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
-    if st.button("Signup"):
-        if create_user(user, pw):
-            st.success("Account created successfully ✅")
+    if st.button("Sign Up"):
+        if create_user(name, email, password):
+            st.success("✅ Account created! Please login.")
         else:
-            st.warning("User already exists")
+            st.error("❌ Email already exists")
 
-# ================= LOGIN =================
-elif menu == "Login":
+# ---------------- LOGIN ----------------
+elif choice == "Login":
     st.subheader("🔐 Login")
 
-    user = st.text_input("Username")
-    pw = st.text_input("Password", type="password")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        if login_user(user, pw):
+        user = login_user(email, password)
+        if user:
             st.session_state.user = user
-            st.session_state.pw=pw
-            st.success("Login successful ✅")
+            st.success("✅ Logged in successfully")
         else:
-            st.error("Invalid credentials ❌")
+            st.error("❌ Invalid credentials")
 
-# ================= DASHBOARD =================
-elif menu == "Dashboard":
+# ---------------- DASHBOARD ----------------
+elif choice == "Dashboard" and st.session_state.user:
 
-    if st.session_state.user is None:
-        st.warning("Please login first")
-        st.stop()
+    st.markdown("## 📊 HealthGuard Dashboard")
+    st.write(f"Welcome, **{st.session_state.user[1]}** 👋")
 
-    st.title("📊 Health Dashboard")
+    # -------- LOAD DATASET --------
+    if os.path.exists("diabetes.csv"):
 
-    if data.empty:
-        st.error("Dataset not found")
-        st.stop()
+        data = pd.read_csv("diabetes.csv")
+        st.success("✅ diabetes.csv Loaded Successfully")
 
-    st.subheader("Dataset Preview")
-    st.dataframe(data.head())
+        # Dataset Preview
+        st.markdown("### 📄 Dataset Preview")
+        st.dataframe(data.head())
 
-    # ----------- CHARTS -----------
-    col1, col2 = st.columns(2)
+        # Dataset Statistics
+        st.markdown("### 📊 Dataset Statistics")
+        st.write(data.describe())
 
-    with col1:
-        fig1, ax1 = plt.subplots()
-        data["Outcome"].value_counts().plot(kind="bar", ax=ax1)
-        st.pyplot(fig1)
+        # -------- MODEL TRAINING --------
+        X = data.drop("Outcome", axis=1)
+        y = data["Outcome"]
 
-    with col2:
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_scaled, y, test_size=0.2, random_state=42
+        )
+
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+
+        st.success("🤖 AI Model Trained Successfully")
+
+        # -------- MODEL ACCURACY --------
+        accuracy = model.score(X_test, y_test)
+        st.markdown("### 📈 Model Accuracy")
+        st.success(f"Accuracy: {accuracy * 100:.2f}%")
+
+        # -------- CONFUSION MATRIX --------
+        st.markdown("### 📊 Confusion Matrix")
+
+        y_pred = model.predict(X_test)
+        cm = confusion_matrix(y_test, y_pred)
+
+        fig, ax = plt.subplots()
+        ax.imshow(cm)
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("Actual")
+        ax.set_title("Confusion Matrix")
+
+        for i in range(len(cm)):
+            for j in range(len(cm)):
+                ax.text(j, i, cm[i][j], ha="center", va="center")
+
+        st.pyplot(fig)
+
+        # -------- GLUCOSE DISTRIBUTION --------
+        st.markdown("### 🧪 Glucose Distribution")
+
         fig2, ax2 = plt.subplots()
-        data["Outcome"].value_counts().plot(kind="pie", autopct="%1.1f%%", ax=ax2)
+        ax2.hist(data["Glucose"], bins=20)
+        ax2.set_title("Glucose Level Distribution")
+        ax2.set_xlabel("Glucose")
+        ax2.set_ylabel("Count")
+
         st.pyplot(fig2)
 
-    st.subheader("Correlation Heatmap")
-    fig3, ax3 = plt.subplots()
-    sns.heatmap(data.corr(), annot=True, cmap="coolwarm", ax=ax3)
-    st.pyplot(fig3)
+        # -------- BMI DISTRIBUTION --------
+        st.markdown("### ⚖ BMI Distribution")
 
-    # ----------- INPUT -----------
-    st.subheader("🧾 Enter Health Details")
+        fig3, ax3 = plt.subplots()
+        ax3.hist(data["BMI"], bins=20)
+        ax3.set_title("BMI Distribution")
+        ax3.set_xlabel("BMI")
+        ax3.set_ylabel("Count")
 
-    pregnancies = st.number_input("Pregnancies", 0, 20)
-    glucose = st.number_input("Glucose", 0, 200)
-    bp = st.number_input("Blood Pressure", 0, 140)
-    skin = st.number_input("Skin Thickness", 0, 100)
-    insulin = st.number_input("Insulin", 0, 900)
-    bmi_input = st.number_input("BMI", 0.0, 70.0)
-    dpf = st.number_input("Diabetes Pedigree Function", 0.0, 3.0)
-    age = st.number_input("Age", 1, 120)
+        st.pyplot(fig3)
 
-    input_data = np.array([[pregnancies, glucose, bp, skin, insulin, bmi_input, dpf, age]])
+        # -------- USER INPUT --------
+        st.markdown("### 🧪 Enter Your Health Details")
 
-    if st.button("Predict"):
+        pregnancies = st.number_input("Pregnancies", 0, 20, 0)
+        glucose = st.number_input("Glucose Level", 0, 300, 120)
+        blood_pressure = st.number_input("Blood Pressure", 0, 200, 70)
+        skin_thickness = st.number_input("Skin Thickness", 0, 100, 20)
+        insulin = st.number_input("Insulin", 0, 900, 80)
+                bmi = st.number_input("BMI", 0.0, 70.0, 25.0)
+        diabetes_pedigree = st.number_input("Diabetes Pedigree Function", 0.0, 3.0, 0.5)
+        age = st.number_input("Age", 1, 120, 30)
 
-        pred = model.predict(input_data)[0]
-        prob = model.predict_proba(input_data)[0][1]
+        # -------- PREDICTION --------
+        if st.button("🔍 Predict Diabetes Risk"):
 
-        st.metric("Risk Score", f"{prob*100:.2f}%")
+            user_data = np.array([[
+                pregnancies, glucose, blood_pressure,
+                skin_thickness, insulin, bmi,
+                diabetes_pedigree, age
+            ]])
 
-        if pred == 1:
-            st.error("⚠ High Risk of Diabetes")
-        else:
-            st.success("✅ Low Risk")
+            user_scaled = scaler.transform(user_data)
+            prediction = model.predict(user_scaled)[0]
+            probability = model.predict_proba(user_scaled)[0][1]
 
-        # Save history
-        save_history(st.session_state.user, glucose, bmi_input, age, int(pred))
+            if prediction == 1:
+                st.error(f"⚠️ High Risk of Diabetes ({probability*100:.2f}%)")
+            else:
+                st.success(f"✅ Low Risk of Diabetes ({(1 - probability)*100:.2f}%)")
 
-    # ----------- HISTORY -----------
-    st.subheader("📈 Your History")
-
-    hist = get_history(st.session_state.user)
-
-    if not hist.empty:
-        st.line_chart(hist[["glucose", "bmi"]])
     else:
-        st.info("No history available")
-
-    # ----------- AI ASSISTANT -----------
-    st.subheader("🤖 AI Assistant")
-
-    q = st.text_input("Ask about health")
-
-    if q:
-        q = q.lower()
-        if "diet" in q:
-            st.write("🥗 Eat healthy, low sugar foods")
-        elif "exercise" in q:
-            st.write("🏃 Exercise daily")
-        else:
-            st.write("💡 Maintain healthy lifestyle")
-
-# ================= FEEDBACK =================
-elif menu == "Feedback":
-
-    if st.session_state.user is None:
-        st.warning("Please login first")
+        st.error("❌ diabetes.csv not found in project folder.")
         st.stop()
 
-    st.subheader("💬 Feedback")
+# ---------------- CONTACT PAGE ----------------
+elif choice == "Contact" and st.session_state.user:
+    st.subheader("📩 Contact HealthGuard Team")
 
-    msg = st.text_area("Your message")
+    message = st.text_area("Your Message")
 
-    if st.button("Submit"):
-        add_feedback(st.session_state.user, msg)
-        st.success("Feedback submitted")
+    if st.button("Send Message"):
+        add_feedback(st.session_state.user[2], message)
+        st.success("✅ Message sent successfully!")
 
-    for f in get_feedback():
-        st.write(f"👤 {f[0]} ➜ {f[1]}")
+# ---------------- ADMIN PANEL ----------------
+ADMIN_EMAIL = "admin@healthguard.ai"
 
-# ================= LOGOUT =================
-st.sidebar.markdown("---")
-if  st.sidebar.button("Logout"):
+if st.session_state.user and st.session_state.user[2] == ADMIN_EMAIL:
+    st.markdown("## 👨‍💼 Admin Panel – User Feedback")
+
+    feedbacks = get_all_feedback()
+    if feedbacks:
+        for f in feedbacks:
+            st.write(f"📧 {f[1]} — {f[2]}")
+    else:
+        st.info("No feedback yet")
+
+# ---------------- LOGOUT ----------------
+if choice == "Logout":
     st.session_state.user = None
     st.success("Logged out successfully")
+       
