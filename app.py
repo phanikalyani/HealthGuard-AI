@@ -1,7 +1,13 @@
+import streamlit as st
+
+# MUST BE FIRST
+st.set_page_config(page_title="HealthGuard AI", layout="wide")
+
+# other imports
 import pandas as pd
 import numpy as np
 import os
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # pyright: ignore[reportMissingModuleSource]
 import seaborn as sns
 
 from sklearn.model_selection import train_test_split
@@ -9,6 +15,8 @@ from sklearn.ensemble import RandomForestClassifier
 
 from db import *
 
+# NOW safe
+init_db()
 # ================= CONFIG =================
 st.set_page_config(page_title="HealthGuard AI", layout="wide")
 init_db()
