@@ -1,7 +1,5 @@
 import sqlite3
-import bcrypt
 
-# ================= CONNECTION =================
 def get_connection():
     return sqlite3.connect("healthguard.db", check_same_thread=False)
 
@@ -10,13 +8,23 @@ def init_db():
     conn = get_connection()
     c = conn.cursor()
 
+    # USERS TABLE
     c.execute("""
     CREATE TABLE IF NOT EXISTS users (
         username TEXT PRIMARY KEY,
-        password BLOB
+        password TEXT
     )
     """)
 
+    # FEEDBACK TABLE
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS feedback (
+        user TEXT,
+        message TEXT
+    )
+    """)
+
+    # HISTORY TABLE
     c.execute("""
     CREATE TABLE IF NOT EXISTS history (
         user TEXT,
@@ -24,13 +32,6 @@ def init_db():
         bmi REAL,
         age INTEGER,
         result INTEGER
-    )
-    """)
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS feedback (
-        user TEXT,
-        message TEXT
     )
     """)
 
@@ -42,29 +43,30 @@ def create_user(username, password):
     conn = get_connection()
     c = conn.cursor()
 
-    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-
     try:
-        c.execute("INSERT INTO users (username, password) VALUES (?, ?)",
-                  (username, hashed))
+        c.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?)",
+            (username, password)
+        )
         conn.commit()
-        return True
     except:
-        return False
-    finally:
-        conn.close()
+        pass
+
+    conn.close()
 
 def login_user(username, password):
     conn = get_connection()
     c = conn.cursor()
 
-    c.execute("SELECT password FROM users WHERE username=?", (username,))
+    c.execute(
+        "SELECT * FROM users WHERE username=? AND password=?",
+        (username, password)
+    )
+
     result = c.fetchone()
     conn.close()
 
-    if result:
-        return bcrypt.checkpw(password.encode(), result[0])
-    return False
+    return result
 
 # ================= HISTORY =================
 def save_history(user, glucose, bmi, age, result):
@@ -72,8 +74,8 @@ def save_history(user, glucose, bmi, age, result):
     c = conn.cursor()
 
     c.execute("""
-    INSERT INTO history (user, glucose, bmi, age, result)
-    VALUES (?, ?, ?, ?, ?)
+        INSERT INTO history (user, glucose, bmi, age, result)
+        VALUES (?, ?, ?, ?, ?)
     """, (user, glucose, bmi, age, result))
 
     conn.commit()
@@ -81,14 +83,13 @@ def save_history(user, glucose, bmi, age, result):
 
 def get_history(user):
     import pandas as pd
-    conn = get_connection()
 
+    conn = get_connection()
     df = pd.read_sql_query(
         "SELECT * FROM history WHERE user=?",
         conn,
         params=(user,)
     )
-
     conn.close()
     return df
 
@@ -97,7 +98,10 @@ def add_feedback(user, message):
     conn = get_connection()
     c = conn.cursor()
 
-    c.execute("INSERT INTO feedback VALUES (?, ?)", (user, message))
+    c.execute(
+        "INSERT INTO feedback (user, message) VALUES (?, ?)",
+        (user, message)
+    )
 
     conn.commit()
     conn.close()
@@ -111,3 +115,4 @@ def get_feedback():
 
     conn.close()
     return data
+
