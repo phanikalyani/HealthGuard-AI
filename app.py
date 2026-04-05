@@ -94,6 +94,7 @@ elif menu == "Login":
     if st.button("Login"):
         if login_user(user, pw):
             st.session_state.user = user
+            st.session_state.pw=pw
             st.success("Login successful ✅")
         else:
             st.error("Invalid credentials ❌")
