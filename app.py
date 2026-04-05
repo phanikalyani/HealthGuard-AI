@@ -40,8 +40,7 @@ st.subheader("Predicting Health Risks Before It’s Too Late")
 
 st.markdown("""
 *This tool provides an AI-based health risk estimate 
-and is NOT a medical diagnosisPlease consult a doctor for professional medical advice.*
-""")
+and is NOT a medical diagnosisPlease consult a doctor for professional medical advice.* """)
 
 # ---------------- SESSION ----------------
 if "user" not in st.session_state:
