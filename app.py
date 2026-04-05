@@ -30,7 +30,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix
 
-from db import create_user, login_user, add_feedback, get_all_feedbac
+from db import *
 
 # ---------------- SESSION ----------------
 if "user" not in st.session_state:
