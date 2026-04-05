@@ -1,4 +1,3 @@
-from db import init_db, login_user, create_user, save_history, get_history, add_feedback, get_feedback
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-
+from db import *
 from utils import calculate_bmi
 
 from sklearn.model_selection import train_test_split
