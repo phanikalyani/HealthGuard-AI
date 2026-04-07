@@ -1,184 +1,93 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import sqlite3
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+import os
 
+from db import init_db, create_user, login_user
+
+# ================= INIT =================
 st.set_page_config(page_title="HealthGuard AI", layout="wide")
+init_db()
 
-# ================= DATABASE =================
-conn = sqlite3.connect("healthguard.db", check_same_thread=False)
-c = conn.cursor()
-
-c.execute("CREATE TABLE IF NOT EXISTS users(username TEXT, password TEXT)")
-c.execute("CREATE TABLE IF NOT EXISTS feedback(user TEXT, message TEXT)")
-conn.commit()
-
-# ================= LOAD DATA =================
-@st.cache_data
-def load_data():
-    return pd.read_csv("diabetes.csv")
-
-data = load_data()
-
-# ================= TRAIN MODEL =================
-X = data.drop("Outcome", axis=1)
-y = data["Outcome"]
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-model = RandomForestClassifier()
-model.fit(X_train, y_train)
-
-# ================= AUTH FUNCTIONS =================
-def login_user(username, password):
-    c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-    return c.fetchone()
-
-def create_user(username, password):
-    c.execute("INSERT INTO users VALUES (?,?)", (username, password))
-    conn.commit()
-
-def add_feedback(user, message):
-    c.execute("INSERT INTO feedback VALUES (?,?)", (user, message))
-    conn.commit()
-
-def get_all_feedback():
-    c.execute("SELECT * FROM feedback")
-    return c.fetchall()
+# ================= UI STYLE =================
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(to right, #141E30, #243B55);
+    color: white;
+}
+h1, h2, h3 {
+    color: #00C9A7;
+}
+.stButton>button {
+    background-color: #00C9A7;
+    color: white;
+    border-radius: 10px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ================= SESSION =================
 if "user" not in st.session_state:
     st.session_state.user = None
 
 # ================= SIDEBAR =================
-menu = st.sidebar.selectbox(
-    "Navigation",
-    ["Home", "Login", "Signup", "Dashboard", "Feedback"]
-)
+menu = st.sidebar.selectbox("Navigation", ["Home", "Login", "Signup", "Chatbot"])
 
 # ================= HOME =================
 if menu == "Home":
-    st.title("🩺 HealthGuard AI")
-    st.subheader("Predict health risks before it’s too late")
+    st.title("🏥 HealthGuard AI")
+    st.markdown("### 🚀 AI Health Risk Prediction & Smart Doctor Assistant")
+    st.info("⚠ This tool provides AI insights, not a medical diagnosis.")
 
 # ================= SIGNUP =================
 elif menu == "Signup":
-
     st.subheader("Create Account")
 
-    new_user = st.text_input("Username")
-    new_pass = st.text_input("Password", type="password")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
     if st.button("Signup"):
-
-        if new_user == "" or new_pass == "":
-            st.warning("Please fill all fields")
-
-        else:
-            create_user(new_user, new_pass)
+        if create_user(email, password):
             st.success("Account created successfully")
+        else:
+            st.warning("User already exists")
 
 # ================= LOGIN =================
 elif menu == "Login":
-
     st.subheader("Login")
 
-    user = st.text_input("Username")
+    email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
     if st.button("Login"):
-
-        result = login_user(user, password)
-
-        if result:
-            st.session_state.user = user
+        if login_user(email, password):
+            st.session_state.user = email
             st.success("Login successful")
         else:
             st.error("Invalid credentials")
 
-# ================= DASHBOARD =================
-elif menu == "Dashboard":
+# ================= CHATBOT =================
+elif menu == "Chatbot":
 
     if st.session_state.user is None:
         st.warning("Please login first")
         st.stop()
 
-    st.title("📊 Health Dashboard")
+    st.subheader("🤖 AI Doctor Assistant")
 
-    st.subheader("Dataset Preview")
-    st.dataframe(data)
+    user_input = st.text_input("Describe your symptoms...")
 
-    # ----------- CHARTS -----------
+    if st.button("Get Advice"):
 
-    col1, col2 = st.columns(2)
+        if "fever" in user_input.lower():
+            st.info("You may have an infection. Stay hydrated and consult a doctor.")
 
-    with col1:
-        st.subheader("Diabetes Outcome Count")
-        fig1, ax1 = plt.subplots()
-        data["Outcome"].value_counts().plot(kind="bar", ax=ax1)
-        st.pyplot(fig1)
+        elif "diabetes" in user_input.lower():
+            st.info("Maintain healthy diet, monitor sugar levels regularly.")
 
-    with col2:
-        st.subheader("Outcome Distribution")
-        fig2, ax2 = plt.subplots()
-        data["Outcome"].value_counts().plot(kind="pie", autopct="%1.1f%%", ax=ax2)
-        st.pyplot(fig2)
+        elif "headache" in user_input.lower():
+            st.info("Take rest, hydrate, reduce screen time.")
 
-    st.subheader("Correlation Heatmap")
-    fig3, ax3 = plt.subplots(figsize=(10, 6))
-    sns.heatmap(data.corr(), annot=True, cmap="coolwarm", ax=ax3)
-    st.pyplot(fig3)
-
-    # ----------- USER INPUT -----------
-
-    st.subheader("Enter Your Health Details")
-
-    pregnancies = st.number_input("Pregnancies", 0, 20)
-    glucose = st.number_input("Glucose", 0, 200)
-    blood_pressure = st.number_input("Blood Pressure", 0, 140)
-    skin_thickness = st.number_input("Skin Thickness", 0, 100)
-    insulin = st.number_input("Insulin", 0, 900)
-    bmi = st.number_input("BMI", 0.0, 70.0)
-    dpf = st.number_input("Diabetes Pedigree Function", 0.0, 3.0)
-    age = st.number_input("Age", 1, 120)
-
-    input_data = np.array([[pregnancies, glucose, blood_pressure,
-                            skin_thickness, insulin, bmi, dpf, age]])
-
-    if st.button("Predict"):
-
-        prediction = model.predict(input_data)[0]
-
-        input_df = pd.DataFrame(input_data, columns=X.columns)
-
-        st.subheader("Your Input Data")
-        st.dataframe(input_df)
-
-        if prediction == 1:
-            st.error("⚠ High Risk of Diabetes")
         else:
-            st.success("✅ Low Risk of Diabetes")
-
-# ================= FEEDBACK =================
-elif menu == "Feedback":
-
-    if st.session_state.user is None:
-        st.warning("Please login first")
-        st.stop()
-
-    st.subheader("Send Feedback")
-
-    msg = st.text_area("Your message")
-
-    if st.button("Submit Feedback"):
-        add_feedback(st.session_state.user, msg)
-        st.success("Feedback submitted")
-
-    st.subheader("All Feedback")
-
-    for row in get_all_feedback():
-        st.write(f"👤 {row[0]} ➜ {row[1]}")
+            st.info("Please consult a healthcare professional for accurate diagnosis.")
