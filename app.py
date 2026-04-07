@@ -16,7 +16,7 @@ init_db()
 st.markdown("""
 <style>
 .stApp {
-    background: linear-gradient(to right, #141E30, #243B55);
+    background: linear-gradient(to right, #FDF6E3, #243B55);
     color: white;
 }
 h1, h2, h3 {
