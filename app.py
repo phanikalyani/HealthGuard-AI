@@ -179,7 +179,7 @@ elif menu == "Chatbot":
             return "😷 Might be cold or allergy. Stay warm and drink fluids."
 
         else:
-            return "⚕️; I'm here to help! Please describe your symptoms in more detail."
+            return "⚕️ I'm here to help! Please describe your symptoms in more detail."
 
 # ================= FOOTER =================
 st.markdown("---")
